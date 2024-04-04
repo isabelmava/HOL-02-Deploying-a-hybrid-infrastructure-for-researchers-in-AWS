@@ -1,12 +1,11 @@
-﻿UNIVERSITAT ROVIRA I VIRGILI  1
+#### UNIVERSITAT ROVIRA I VIRGILI
 
-Isabel Martín Valle 
+# Deploying a hybrid infrastructure for researchers in AWS 
 
-Deploying a hybrid infrastructure for researchers in AWS 
+#### Isabel Martín Valle                                
+#### High-Performance and Distributed Computing for Big Data 
 
-Isabel Martín Valle                                 High-Performance and Distributed Computing for Big Data 
-
-1. **INTRODUCTION**
+## 1. **INTRODUCTION**
 
 In the world of data science and research, using Jupyter Notebooks has become essential for analyzing data and sharing knowledge. And now, with the growing popularity of the cloud, integrating this technology offers more flexibility, scalability and  access  than  ever  before.  This  report  delves  into  how  to  leverage  Amazon  Web  Services  (AWS)  to  create  a  hybrid infrastructure that facilitates research collaboration. 
 
@@ -16,9 +15,9 @@ In this practice, we focused on setting up a private Jupyter Notebook server on 
 
 In addition, we explore how to integrate a public Nginx web server using Voila, allowing researchers to easily share their findings with a wider audience. Through hands-on exercises, this lab explains in detail how to configure and deploy this hybrid infrastructure to suit the specific needs of each research project. 
 
-2. **ARCHITECTURE DIAGRAM AND PROCEDURES**
+## 2. **ARCHITECTURE DIAGRAM AND PROCEDURES**
 
-***Architecture diagram*** 
+### ***Architecture diagram*** 
 
 The suggested hybrid infrastructure is shown visually in **Figure 1**. It shows an AWS Virtual Private Cloud (VPC) divided into three subnets: DMZ, Production, and Research. An Internet-accessible EC2 instance called HOL02-VoilaServer is hosted on the Production Subnet. An EC2 instance called HOL02-Jupyter is hosted on the Research Subnet and is reachable through a VPN. An EC2 instance called HOL02-VPN is located in the DMZ Subnet and allows your team to access securely via SSH to the Research subnet.  
 
@@ -35,25 +34,21 @@ The suggested hybrid infrastructure is shown visually in **Figure 1**. It shows 
 - DMZ subnet: separated net and secured that it is used to proportionate secure access to the Research subnet via VPN.  
 - VPN: technology that creates a safe connection between two nets, allowing that the users to access to a private net from a remote ubication.  
 
-***Infrastructure setup*** 
+### ***Infrastructure setup*** 
 
-1. *Prerequisites* 
+#### 1. *Prerequisites* 
 
 First of all, we have to import our public key to AWS EC2 and name it HOL02 to allow a secure access to the EC2 instances based on public keys. This is done by connecting to AWS Academy Learner Lab, pressing Start Lab and search for EC2 -  Key Pairs. Once there, we have to name the key and paste the public key generated in our computer by typing the following command in our terminal:  
 
-*ssh-keygen -t type* 
+``` *ssh-keygen -t type* ```
 
 Once completed the form, we click on import key pair.(**Figure 2)**.  
-
-UNIVERSITAT ROVIRA I VIRGILI  3
-
-Isabel Martín Valle 
 
 ![](Aspose.Words.595b23d4-1dcd-4225-b137-80362058195e.002.jpeg)
 
 **Figure 2.** Import key pair. 
 
-2. *VPC* 
+#### 2. *VPC* 
 
 An AWS VPC is a virtual network (an isolated portion of the AWS Cloud) that allows to launch resources such as EC2 instances and RDS databases in an isolated environment in the cloud. It provides control over network configuration, such as IP address assignment and routing management. 
 
@@ -74,7 +69,7 @@ The CIDR setting determines the range of IP directions that can be assigned to t
 
 **Figure 4**. Resulting VPC. 
 
-3. *Subnets* 
+#### 3. *Subnets* 
 
 The subnets are created within the VPC created in the previous step named HOL-02 VPC. Three subnets are created: the DMZ subnet, the Research subnet and the Production subnet. Each subnet will have a different CIDR number. Within the VPC, IP addresses of subnets allow resources to communicate with each other within the private network. Below are the settings for each subnet, if not specified, they stay in default.  
 
@@ -94,13 +89,11 @@ The following figures shows the creation of the HOL02-DMZ subnet, which shows th
 
 **Figure 5**. Creation of DMZ subnet. 
 
-UNIVERSITAT ROVIRA I VIRGILI  5 Isabel Martín Valle 
-
 ![](Aspose.Words.595b23d4-1dcd-4225-b137-80362058195e.006.png)
 
 **Figure 6.** Resulting subnets created. 
 
-4. *Internet Gateway* 
+#### 4. *Internet Gateway* 
 
 An internet gateway is a virtual router that connects a VPC to the internet to establish an entrance and exit point for the traffic between the resources of our VPC and the public internet. This is useful to communicate with external resources such as databases or servers. The following settings were set for the internet gateway, all the rest were remained as default (**Figure 7)**.  
 
@@ -116,7 +109,7 @@ An internet gateway is a virtual router that connects a VPC to the internet to e
 
 **Figure 8**. Internet gateway attached to the VPC. 
 
-5. *Route tables* 
+#### 5. *Route tables* 
 
 When creating subnets within a VPC in AWS, each of those subnets needs an associated routing table (route table). This is necessary because each subnet may have different connectivity requirements. For example, some subnets may need access to the Internet, while others may need access only to resources within the same VPC. By having a dedicated routing table for each subnet, you can define how traffic is routed in and out of that specific subnet. Therefore three Route Tables were created for each subnet with the following configuration.  
 
@@ -138,7 +131,7 @@ Name: HOL02-Research-RT Association: HOL02-Research
 
 **Figure 10.** Route Tables connections within the VPC Internet Gateway. 
 
-6. *Security groups* 
+#### 6. *Security groups* 
 
 Security Groups in AWS are like virtual firewalls that allow you to specify what type of network traffic is allowed or blocked for your cloud instances. When you create a Security Group, you can configure specific rules that determine what types of inbound and outbound connections are allowed. For example, you can allow inbound traffic on port 443 (HTTPS) to allow secure connections to a web server, or allow inbound traffic on port 22 (SSH) to allow remote access to an instance via Secure Shell (SSH). 
 
@@ -172,8 +165,6 @@ Description: Security group for Research Ports:
 
 22 (SSH) - only from HOL02-DMZ-SG 8888 (TCP) - only from HOL02-DMZ-SG 
 
-UNIVERSITAT ROVIRA I VIRGILI  7 Isabel Martín Valle 
-
 **Figure 11, 12,13** show the resulting configuration of the three security groups.  
 
 ![](Aspose.Words.595b23d4-1dcd-4225-b137-80362058195e.012.png)
@@ -188,7 +179,7 @@ UNIVERSITAT ROVIRA I VIRGILI  7 Isabel Martín Valle
 
 **Figure 13**. Security group HOL02-Research-SG. 
 
-7. *EC2 instances* 
+#### 7. *EC2 instances* 
 
 Three  instances  must  be  created,  each  one  located  within  a  subnet  and  with  a  security  group.  The  configuration  was  the following.  Each  instance  had  a  different  AMI.  An  AMI  (Amazon  Machine  Image)  is  a  virtual  template  that  contains  the information needed to launch an EC2 instance on AWS. It includes the operating system, startup data, and any pre-installed software. Moreover, one had an elastic IP. An instance having an Elastic IP means that it has a fixed and permanent public IP address that does not change, which facilitates constant access to the instance from outside AWS. This makes sense to applied to the DMZ instance. 
 
@@ -218,7 +209,7 @@ UNIVERSITAT ROVIRA I VIRGILI  9 Isabel Martín Valle
 
 **Figure 16.** Instance summary for HOL02-Jupyter**.** 
 
-8. *S3 Buckets* 
+#### 8. *S3 Buckets* 
 
 The "HOL02-Notebooks" bucket in Amazon S3 must be synchronized with the research and production subnets to allow access to notebooks from both environments and ensure consistency of data used by the research team and the production environment. The configuration was the following. 
 
@@ -234,20 +225,20 @@ This bucket must include all the notebooks used by the research team.
 
 **Figure 17**. Bucket HOL02-Notebook with sample Jupyter Notebook. 
 
-***Configure all AWS resources*** 
+### ***Configure all AWS resources*** 
 
-1) *OpenVPN configuration (HOL02-VPN instance)* 
+#### 1) *OpenVPN configuration (HOL02-VPN instance)* 
 
 OpenVPN is an open source software solution that provides secure virtual private network (VPN) connections over the public Internet.  OpenVPN  is  installed  on  the  HOL02-VPN  instance  specifically  to  serve  as  a  centralized  VPN  server. The  other instances do not need OpenVPN installed because they act as clients that connect to the VPN server to securely access the private network from external locations. The HOL02-VPN instance is responsible for managing incoming VPN connections and providing secure access to the internal network for the other instances. 
 
-*Installation* 
+##### *Installation* 
 
 First of all OpenVPN must be installed. This is done by first connecting to the HOL02-VPN instance and then executing the commands above written. To access to the HOL02-VPN instance, we run first the instance and once is running we execute the following command in our terminal (specifying the ID key and the ssh direction specified in the instance summary):  
 
 ![](Aspose.Words.595b23d4-1dcd-4225-b137-80362058195e.020.png)
 
 Once connected these are the commands to install OpenVPN.  
-
+```
 sudo apt update -y 
 
 sudo apt install ca-certificates gnupg wget net-tools -y 
@@ -255,8 +246,8 @@ sudo apt install ca-certificates gnupg wget net-tools -y
 sudo wget https://as-repository.openvpn.net/as-repo-public.asc -qO /etc/apt/trusted.gpg.d/as-repo-public.asc sudo echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/as-repo-public.asc] http://as- repository.openvpn.net/as/debian jammy main" | sudo tee /etc/apt/sources.list.d/openvpn-as-repo.list 
 
 sudo apt update && sudo apt install openvpn-as -y
-
-*Configuring OpenVPN* 
+```
+##### *Configuring OpenVPN* 
 
 - After installing OpenVPN, navigate to the public IP of the EC2 instance named HOL02-VPN and log in using the username openvpn and the password shown in the terminal. The URL should be https://<elastic-ip>:943/admin.  
 
@@ -282,9 +273,7 @@ sudo apt update && sudo apt install openvpn-as -y
 
 **Figure 20**. VPN settings for CIDR and other configurations. 
 
-*Installing the OpenVPN client* 
-
-UNIVERSITAT ROVIRA I VIRGILI  11 Isabel Martín Valle 
+##### *Installing the OpenVPN client* 
 
 Follow the instructions in the https://<elastic-ip>:943 to install the OpenVPN client on your local machine and download the user-locked profile. There is no need to configure other users in the OpenVPN server. 
 
@@ -296,36 +285,36 @@ Follow the instructions in the https://<elastic-ip>:943 to install the OpenVPN c
 
 Take into account that when we want to connect to the VPN instance, we must first connect to the OpenVPN and then jump to this instance.  
 
-2) *Configuring Nginx (HOL02-VoilaServer instance)* 
+#### 2) *Configuring Nginx (HOL02-VoilaServer instance)* 
 
 Nginx is software that helps to display websites on the Internet quickly and securely. It is installed on the Voila Server instance to ensure that Voila applications are accessible from the web efficiently. 
 
 To install this, first we must connect to the VoilaServer instance. This is done by accessing the Private Network. nce the VPN Client is connected, use the private IP address of the EC2 instance to access the network, not the public IP. The VPN routes traffic to the subnets in the range of, 10.0.2.X, as previously configured. We access via ssh as ssh -i yourkey ec2-user@10.0.2.X where X is the private IP.  
 
 Once done, the following commands are executed in the terminal (**Figure 23**).  
-
+```
 \# For Amazon Linux 2 
 
 sudo amazon-linux-extras install nginx1 -y sudo systemctl start nginx 
 
 sudo systemctl enable nginx 
-
+```
 ![](Aspose.Words.595b23d4-1dcd-4225-b137-80362058195e.026.png)
 
 **Figure 23**. Inside the instance and all executed for Nginx installation. 
 
-3) *Jupyter Notebook setup (HOL02-Jupyter)* 
+#### 3) *Jupyter Notebook setup (HOL02-Jupyter)* 
 
 First of all, we must enter via Private Network to the HOL02-Jupyter instance via ssh. This is done as before but with the 10.0.3.X direction and after the connection to the OpenVPN. Once done, we must install and configure python, this is done by executing the following commands.  
 
 - Update the instance before installing new Software 
 
-sudo yum update -y 
+```sudo yum update -y ```
 
 - Make an installation script and run it:  
 
-vi install-python39.sh
-
+```vi install-python39.sh```
+```
 #!/bin/bash 
 
 PYTHON\_VERSION=3.9.0 
@@ -354,31 +343,32 @@ cd ..
 
 sudo rm -rf Python-$PYTHON\_VERSION 
 
-sudo rm -rf Python-$PYTHON\_VERSION.tgz 
+sudo rm -rf Python-$PYTHON\_VERSION.tgz
+```
 
-bash install-python39.sh 
+```bash install-python39.sh ```
 
 - Creating a virtual environment and activate it.  
 
-python3.9 -m venv jupyter-env source jupyter-env/bin/activate 
+```python3.9 -m venv jupyter-env source jupyter-env/bin/activate ```
 
 - Installing Jupyter Notebook (upragrading pip to avoid warnings)  pip install jupyter 
 
-pip install --upgrade pip 
+```pip install --upgrade pip ```
 
 - Create directory for the notebooks 
 
-mkdir notebooks 
+```mkdir notebooks ```
 
-cd notebooks 
+```cd notebooks ```
 
-*Configuring aws* 
+##### *Configuring aws* 
 
 Before continuing, it is important to set the aws configuration. This is done first by running aws configure in the terminal, then paste  the  credentials  for  keys  and  setting  the  region  to:  us-east-1.  Then  running  the  command  aws  configure  set aws\_session\_token with the paste token of the session.  
 
 Once done this, we can run Jupyter Notebook in the background using the following command:  
 
-nohup  jupyter  notebook  --ip=0.0.0.0  --notebook-dir=/home/ec2-user/notebooks  --no-browser  >  /home/ec2- user/notebooks/jupyter.log  2>&1 & 
+```nohup  jupyter  notebook  --ip=0.0.0.0  --notebook-dir=/home/ec2-user/notebooks  --no-browser  >  /home/ec2- user/notebooks/jupyter.log  2>&1 & ```
 
 To access the Jupyter Notebook using the browser, we need to run it in the background and then use the private IP address of the EC2 instance like in my case: http://10.0.3.40:8888 
 
@@ -388,21 +378,17 @@ This will then appear in the browser (**Figure 24)**:
 
 **Figure 24.** Jupyter Notebook in the browser. 
 
-UNIVERSITAT ROVIRA I VIRGILI  14 
-
-Isabel Martín Valle 
-
 In this figure, it can also be seen that we have created an Untitled Jupyter Notebook to install the boto3 and pandas libraries via pip, then import and configure the libraries needed to interact with AWS S3 in the us-east-1 region **(Figure 25**). 
 
 ![](Aspose.Words.595b23d4-1dcd-4225-b137-80362058195e.028.png)
 
 **Figure 25.** Configuration of AWS S3. 
 
-4) *Automate the synchronization with cron* 
+#### 4) *Automate the synchronization with cron* 
 
 We want to schedule each Sunday at 0:00 a synchronization with cron to update the system. To do so, this command is run in each instance.  
 
-echo "0 0 \* \* 0  sudo yum update -y" | crontab - 
+```echo "0 0 \* \* 0  sudo yum update -y" | crontab - ```
 
 The return message is none:  
 
@@ -432,7 +418,7 @@ Firstly, the same aws configuration as HOL02-Jupyter instance must be done. And 
 
 **Figure 28.**  Synchronization with HOL02-VoilaServer 
 
-3. VERIFICATION AND COMPLETION TESTS
+## 3. VERIFICATION AND COMPLETION TESTS
 
 To verificate that everything was working properly, I connected first to the OpenVPN:  
 
@@ -457,15 +443,13 @@ Checking that the bucket was synchronized seeing the Jupyter Notebook sample was
 
 **Figure 32**.S3 bucket synchronized. 
 
-UNIVERSITAT ROVIRA I VIRGILI  15 Isabel Martín Valle 
-
 Checking if we have access to the Jupyter Notebook via browser by running Jupyter Notebook in the background of the HOL02- Jupyter instance:  
 
 ![ref1]
 
 **Figure 33.** Jupyter Notebook running correctly. With all this, we can assure that everything is working correctly.  
 
-4. TROUBLESHOOTING
+## 4. TROUBLESHOOTING
 
 1st issue: Accessing the Private Network: 
 
@@ -484,11 +468,12 @@ When trying to synchronize the S3 Bucket with the HOL02-Jupyter instance, the fo
 ![](Aspose.Words.595b23d4-1dcd-4225-b137-80362058195e.041.png)**Figure 36**. Error in synchronizing the S3 bucket. 
 
 - Resolution: The reason of this error was that the region was not found. This is because I left as None the region of the aws configure command. To resolve this, aws configure must be run again, introduce the keys and srt the region as us- east-1 (the same ones as the instances and the bucket).  
-5. CONCLUSIONS
+
+## 5. CONCLUSIONS
 
 The report details the step-by-step deployment of a hybrid infrastructure on AWS, addressing the configuration of private Jupyter servers and public Nginx servers to share research results. Personally, this project has given me an insight into setting up a VPC and understanding the fundamentals of cloud computing, a new experience for me. As I faced challenges and solved bugs, my understanding of the VPC architecture deepened, highlighting a continuous and meaningful learning process in dealing with these emerging technologies. 
 
-REFERENCES
+## REFERENCES
 
 - AWS Academy Learner Lab 
 - Biomedical Data Science Master - URV 
